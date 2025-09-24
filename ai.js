@@ -18,41 +18,41 @@ export async function generateScene(prompt, opts = {}) {
 }
 
 export async function detectObjects(imageUrl) {
-  // Use websim.chat.completions with json response schema.
-  // We ask the assistant to return JSON list of objects with relative bbox [x,y,w,h] (0..1).
-  const system = {
-    role: "system",
-    content: "You are an object detection assistant. Inspect the provided image and return a JSON array of detected interactive objects. Each item: {name:string, confidence:number, bbox:{x:number,y:number,w:number,h:number}}. Coordinates must be normalized (0..1). Respond with only valid JSON."
-  };
-  const user = {
-    role: "user",
-    content: [
-      { type: "text", text: "Detect interactive objects in this scene. Be concise." },
-      { type: "image_url", image_url: { url: imageUrl } }
-    ],
-    json: true
-  };
-
-  const completion = await websim.chat.completions.create({
-    messages: [system, user],
+  // Use an in-browser detector (TensorFlow.js + coco-ssd) to avoid sending the image to the chat API.
+  // Loads libraries on demand, runs detection on the image, and returns normalized boxes.
+  // Create an image element to feed into the model
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = imageUrl;
+  await new Promise((res, rej) => {
+    img.onload = res;
+    img.onerror = () => rej(new Error('Failed to load image for detection'));
   });
-  // completion.content should be JSON
-  try {
-    const parsed = JSON.parse(completion.content);
-    // basic validation and normalization
-    return (Array.isArray(parsed) ? parsed : []).map((it) => ({
-      name: it.name || "object",
-      confidence: Number(it.confidence || 0),
-      bbox: {
-        x: Number((it.bbox?.x || 0)),
-        y: Number((it.bbox?.y || 0)),
-        w: Number((it.bbox?.w || 0)),
-        h: Number((it.bbox?.h || 0)),
-      }
-    }));
-  } catch (e) {
-    console.warn("object detection parse failed", e);
-    return [];
-  }
-}
 
+  // dynamic import of TF and coco-ssd via CDN
+  const [{default: tf}, cocoSsd] = await Promise.all([
+    import('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.12.0/dist/tf.min.js'),
+    import('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js'),
+  ]);
+
+  // warm up and load model
+  const model = await cocoSsd.load();
+
+  // run detection
+  const predictions = await model.detect(img);
+
+  // predictions: [{bbox: [x,y,width,height], class, score}, ...]
+  const w = img.naturalWidth || img.width;
+  const h = img.naturalHeight || img.height;
+
+  return predictions.map(p => ({
+    name: p.class || 'object',
+    confidence: Number(p.score || 0),
+    bbox: {
+      x: Number((p.bbox[0] / w) || 0),
+      y: Number((p.bbox[1] / h) || 0),
+      w: Number((p.bbox[2] / w) || 0),
+      h: Number((p.bbox[3] / h) || 0),
+    }
+  }));
+}
