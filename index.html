@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Generative Point & Click Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cal+Sans:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app">
+    <header>
+      <h1>Generative Point & Click</h1>
+      <div class="controls">
+        <input id="prompt" placeholder="Describe a scene (e.g. dusty attic with a lantern and chest)" />
+        <button id="generate">Generate Scene</button>
+      </div>
+    </header>
+
+    <section class="stage-wrap">
+      <div id="stage" class="stage">
+        <div id="loader" class="loader hidden">Generating…</div>
+        <img id="sceneImage" alt="Generated scene" crossorigin="anonymous" />
+        <svg id="hotspots" class="hotspots" aria-hidden="true"></svg>
+      </div>
+      <aside class="panel">
+        <h2>Info</h2>
+        <div id="info">Tap an object to inspect it.</div>
+        <h3>Inventory</h3>
+        <ul id="inventory" class="inventory"></ul>
+      </aside>
+    </section>
+
+    <footer>
+      <small>Prototype — uses WebSim AI (websim global). Mobile-friendly.</small>
+    </footer>
+  </main>
+
+  <script type="module" src="app.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
+
