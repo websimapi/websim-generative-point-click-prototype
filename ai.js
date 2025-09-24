@@ -37,7 +37,11 @@ export async function detectObjects(imageUrl) {
 
   // warm up and load model
   // coco-ssd exposes a default export; call .load() from that default
-  const model = await cocoSsdModule.default.load();
+  // support multiple module shapes: default export, named export, or global
+  const cocoModule = (cocoSsdModule && (cocoSsdModule.default || cocoSsdModule)) || window.cocoSsd;
+  const loadFn = cocoModule && cocoModule.load;
+  if (!loadFn) throw new Error('coco-ssd load not found');
+  const model = await loadFn();
 
   // run detection
   const predictions = await model.detect(img);
