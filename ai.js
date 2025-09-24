@@ -30,13 +30,14 @@ export async function detectObjects(imageUrl) {
   });
 
   // dynamic import of TF and coco-ssd via CDN
-  const [{default: tf}, cocoSsd] = await Promise.all([
+  const [{default: tf}, cocoSsdModule] = await Promise.all([
     import('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.12.0/dist/tf.min.js'),
     import('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js'),
   ]);
 
   // warm up and load model
-  const model = await cocoSsd.load();
+  // coco-ssd exposes a default export; call .load() from that default
+  const model = await cocoSsdModule.default.load();
 
   // run detection
   const predictions = await model.detect(img);
